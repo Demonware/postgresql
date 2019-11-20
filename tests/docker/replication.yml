@@ -46,7 +46,8 @@
   become: false
   gather_facts: true
   vars_files:
-    - defaults/repmgr.yml
+    # are these paths relative to the playbook path?
+    - ../../defaults/repmgr.yml
   vars:
     postgresql_version: 10
     postgresql_ext_install_repmgr: yes
