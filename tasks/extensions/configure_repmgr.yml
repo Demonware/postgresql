@@ -31,6 +31,7 @@
     group: "{{ postgresql_service_group }}"
     mode: 0400
     trim_blocks: no
+  no_log: true
 
 - name: Repmgr | Generate ssh keypair for postgres user
   command: "ssh-keygen -b {{repmgr_ssh_key_bits}} -t {{repmgr_ssh_key_type}} -f {{repmgr_private_key_path}} -N ''"
