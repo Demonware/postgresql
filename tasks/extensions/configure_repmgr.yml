@@ -1,7 +1,7 @@
 - name: Repmgr | Update configuration (repmgr.conf)
   template:
     src: "repmgr.conf-{{ repmgr_version }}.j2"
-    dest: "{{postgresql_conf_directory}}/repmgr.conf"
+    dest: "{{repmgr_config_directory}}/repmgr.conf"
     owner: "{{ postgresql_service_user }}"
     group: "{{ postgresql_service_group }}"
     mode: 0640
@@ -75,7 +75,7 @@
     mode: 0600
 
 - name: Repmgr | Check cluster status
-  command: "{{postgresql_bin_directory}}/repmgr -f {{postgresql_conf_directory}}/repmgr.conf cluster show"
+  command: "{{postgresql_bin_directory}}/repmgr -f {{repmgr_config_directory}}/repmgr.conf cluster show"
   become: yes
   become_user: "{{ postgresql_service_user }}"
   changed_when: repmgr_cluster_show.rc != 0
@@ -83,7 +83,7 @@
   ignore_errors: True
 
 - name: Repmgr | Register as primary
-  command: "{{postgresql_bin_directory}}/repmgr -f {{postgresql_conf_directory}}/repmgr.conf primary register"
+  command: "{{postgresql_bin_directory}}/repmgr -f {{repmgr_config_directory}}/repmgr.conf primary register"
   become: yes
   become_user: "{{ postgresql_service_user }}"
   when: repmgr_primary and not ansible_hostname in repmgr_cluster_show.stdout and not "primary" in repmgr_cluster_show.stdout
@@ -95,7 +95,7 @@
   when: not repmgr_primary and not ansible_hostname in repmgr_cluster_show.stdout and not "standby" in repmgr_cluster_show.stdout
 
 - name: Repmgr | Clone standby
-  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{postgresql_conf_directory}}/repmgr.conf standby clone"
+  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{repmgr_config_directory}}/repmgr.conf standby clone"
   become: yes
   become_user: "{{ postgresql_service_user }}"
   when: not repmgr_primary and not ansible_hostname in  repmgr_cluster_show.stdout and not "standby" in repmgr_cluster_show.stdout
@@ -112,13 +112,13 @@
   delegate_to: localhost
 
 - name: Repmgr | Register standby
-  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{postgresql_conf_directory}}/repmgr.conf standby register"
+  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{repmgr_config_directory}}/repmgr.conf standby register"
   become: yes
   become_user: "{{ postgresql_service_user }}"
   when: not repmgr_primary and not ansible_hostname in repmgr_cluster_show.stdout and not "standby" in repmgr_cluster_show.stdout
 
 - name: Repmgr | Verify cluster functionality
-  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{postgresql_conf_directory}}/repmgr.conf cluster crosscheck"
+  command: "{{postgresql_bin_directory}}/repmgr -F -h {% for host, vars in hostvars.items() if 'repmgr_primary' in vars and vars['repmgr_primary'] == True %}{{ host }}{% endfor %} -U repmgr -d repmgr -f {{repmgr_config_directory}}/repmgr.conf cluster crosscheck"
   become: yes
   become_user: "{{ postgresql_service_user }}"
 
@@ -142,7 +142,7 @@
 
 - name: Repmgr | Setup cluster monitoring history cleanup
   copy:
-    content: "{{postgresql_bin_directory}}/repmgr -f {{postgresql_conf_directory}}/repmgr.conf cluster cleanup --keep-history={{repmgr_keep_history_days}}"
+    content: "{{postgresql_bin_directory}}/repmgr -f {{repmgr_config_directory}}/repmgr.conf cluster cleanup --keep-history={{repmgr_keep_history_days}}"
     dest: "/etc/cron.daily/repmgr_cleanup"
     mode: 0755
   when: repmgr_monitoring_history == "true" or repmgr_failover == "automatic"
