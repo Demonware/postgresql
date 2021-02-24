@@ -1,5 +1,5 @@
 - name: Repmgr | Detect primary
-  shell: "set -o pipefail ; {{ postgresql_bin_directory }}/repmgr -f {{ postgresql_conf_directory }}/repmgr.conf cluster show | grep primary | cut -d '|' -f 2 | sed 's/\ //g'"
+  shell: "set -o pipefail ; {{ postgresql_bin_directory }}/repmgr -f {{ repmgr_config_directory }}/repmgr.conf cluster show | grep primary | cut -d '|' -f 2 | sed 's/\ //g'"
   register: repmgr_primary_check
   become: yes
   become_user: postgres
@@ -20,7 +20,7 @@
 
 - name: Repmgr | Declare as primary for new installation
   set_fact:
-    repmgr_primary: "{{ True if ansible_hostname == ansible_play_hosts[0] or inventory_hostname == ansible_play_hosts[0] else False }}"
+    repmgr_primary: "{{ True if ansible_hostname == repmgr_master or inventory_hostname == repmgr_master else False }}"
   when: "hostvars['localhost'].get('repmgr_primary_declared', false) != true"
 
 - debug:
@@ -29,3 +29,9 @@
 - debug:
     var: repmgr_primary_check
     verbosity: 1
+
+- debug:
+    var: repmgr_master
+
+- debug:
+    var: ansible_hostname
